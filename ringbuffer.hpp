@@ -197,6 +197,58 @@ template<typename T, size_t buffer_size = 16, bool wmo_multi_core = false, typen
 			return true;
 		}
 
+
+		/*!
+		 * \brief Reads one element from internal buffer without blocking
+		 * \param[out] data Reference to memory location where removed element will be stored
+		 * \return Indicates if data was fetched from the internal buffer
+		 */
+		bool at(T& data)
+		{
+			index_t tmp_tail = tail;
+
+			if(tmp_tail == head)
+				return false;
+			else
+			{
+				data = data_buff[tmp_tail & buffer_mask];
+
+				if(wmo_multi_core)
+					std::atomic_thread_fence(std::memory_order_release);
+				else
+					std::atomic_signal_fence(std::memory_order_release);
+
+				tail = tmp_tail;
+			}
+			return true;
+		}
+
+
+			/*!
+		 * \brief Reads one element from internal buffer without blocking
+		 * \param[out] data Pointer to memory location where removed element will be stored
+		 * \return Indicates if data was fetched from the internal buffer
+		 */
+		bool at(T* data)
+		{
+			index_t tmp_tail = tail;
+
+			if(tmp_tail == head)
+				return false;
+			else
+			{
+				*data = data_buff[tmp_tail & buffer_mask];
+
+				if(wmo_multi_core)
+					std::atomic_thread_fence(std::memory_order_release);
+				else
+					std::atomic_signal_fence(std::memory_order_release);
+
+				tail = tmp_tail;
+			}
+			return true;
+		}
+
 		/*!
 		 * \brief Reads one element from internal buffer without blocking
 		 * \param[out] data Pointer to memory location where removed element will be stored
